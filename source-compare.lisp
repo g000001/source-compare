@@ -4,8 +4,8 @@
 ;;; ****************************************************************
 ;;; Source Compare: A 'diff' Program for Lisp **********************
 ;;; ****************************************************************
-;;; 
-;;; Source Compare is a common-lisp portable tool for comparing 
+;;;
+;;; Source Compare is a common-lisp portable tool for comparing
 ;;; lisp source files, similar to the unix program 'diff'. Like diff
 ;;; it can ignore case, whitespace, and blank lines. In addition,
 ;;; it can also ignore certain classes of lisp comments. It runs in
@@ -30,8 +30,8 @@
 ;;; ANY WARRANTY. The author(s) do not accept responsibility to anyone for
 ;;; the consequences of using it or for whether it serves any particular
 ;;; purpose or works at all. No warranty is made about the software or its
-;;; performance. 
-;;; 
+;;; performance.
+;;;
 ;;; Use and copying of this software and the preparation of derivative
 ;;; works based on this software are permitted, so long as the following
 ;;; conditions are met:
@@ -40,44 +40,44 @@
 ;;; 	o  No fees or compensation are charged for use, copies, or
 ;;; 	   access to this software. You may charge a nominal
 ;;; 	   distribution fee for the physical act of transferring a
-;;; 	   copy, but you may not charge for the program itself. 
+;;; 	   copy, but you may not charge for the program itself.
 ;;; 	o  If you modify this software, you must cause the modified
 ;;; 	   file(s) to carry prominent notices (a Change Log)
 ;;; 	   describing the changes, who made the changes, and the date
 ;;; 	   of those changes.
 ;;; 	o  Any work distributed or published that in whole or in part
-;;; 	   contains or is a derivative of this software or any part 
-;;; 	   thereof is subject to the terms of this agreement. The 
+;;; 	   contains or is a derivative of this software or any part
+;;; 	   thereof is subject to the terms of this agreement. The
 ;;; 	   aggregation of another unrelated program with this software
 ;;; 	   or its derivative on a volume of storage or distribution
 ;;; 	   medium does not bring the other program under the scope
 ;;; 	   of these terms.
 ;;; 	o  Permission is granted to manufacturers and distributors of
 ;;; 	   lisp compilers and interpreters to include this software
-;;; 	   with their distribution. 
-;;; 
-;;; This software is made available AS IS, and is distributed without 
+;;; 	   with their distribution.
+;;;
+;;; This software is made available AS IS, and is distributed without
 ;;; warranty of any kind, either expressed or implied.
-;;; 
+;;;
 ;;; In no event will the author(s) or their institutions be liable to you
 ;;; for damages, including lost profits, lost monies, or other special,
 ;;; incidental or consequential damages arising out of or in connection
 ;;; with the use or inability to use (including but not limited to loss of
 ;;; data or data being rendered inaccurate or losses sustained by third
-;;; parties or a failure of the program to operate as documented) the 
+;;; parties or a failure of the program to operate as documented) the
 ;;; program, even if you have been advised of the possibility of such
 ;;; damanges, or for any claim by any other party, whether in an action of
 ;;; contract, negligence, or other tortious action.
-;;; 
+;;;
 ;;; The current version of this software and a variety of related utilities
 ;;; may be obtained by anonymous ftp from ftp.cs.cmu.edu in the directory
 ;;;    user/ai/lang/lisp/code/tools/src_cmp/mkant/
-;;; 
+;;;
 ;;; Please send bug reports, comments, questions and suggestions to
 ;;; mkant@cs.cmu.edu. We would also appreciate receiving any changes
-;;; or improvements you may make. 
-;;; 
-;;; If you wish to be added to the Lisp-Utilities@cs.cmu.edu mailing list, 
+;;; or improvements you may make.
+;;;
+;;; If you wish to be added to the Lisp-Utilities@cs.cmu.edu mailing list,
 ;;; send email to Lisp-Utilities-Request@cs.cmu.edu with your name, email
 ;;; address, and affiliation. This mailing list is primarily for
 ;;; notification about major updates, bug fixes, and additions to the lisp
@@ -91,6 +91,7 @@
 ;;;  16-DEC-90  mk   File created.
 ;;;  25-DEC-90  mk   First released version.
 ;;;  24-JAN-91  mk   Added average-case running time analysis.
+;;;  19-MAR-11  CHIBA Masaomi    Adapted to ANSI Common Lisp
 
 ;;; ********************************
 ;;; To Do **************************
@@ -112,7 +113,7 @@
 ;;; Given that in diff's find-merge-split algorithm the merge is on two
 ;;; sets, one with elements less than the others, can we find a way to
 ;;; do the find-find-split-merge in constant time? At least keep a table
-;;; of whether r-1,r are in the same k-candidate set. 
+;;; of whether r-1,r are in the same k-candidate set.
 ;;;
 ;;; Fancy indexing, div&conq, straight-line dist to TR corner metric.
 ;;; Hierarchical LCS (i.e., abstract level first)?
@@ -148,11 +149,11 @@
 ;;; Documentation **************************************************
 ;;; ****************************************************************
 ;;;
-;;; Source Compare is a common-lisp portable tool for comparing 
-;;; lisp source files, similar to the unix program 'diff'. 
+;;; Source Compare is a common-lisp portable tool for comparing
+;;; lisp source files, similar to the unix program 'diff'.
 ;;;
-;;; It uses a greedy variation of the usual dynamic programming 
-;;; implementation of LCS (longest common substring) to do the 
+;;; It uses a greedy variation of the usual dynamic programming
+;;; implementation of LCS (longest common substring) to do the
 ;;; comparison. It tries to maintain the two files being compared
 ;;; in sync, and when a difference is encountered, uses the closest
 ;;; next match, where distance is minimized against some metric.
@@ -170,7 +171,7 @@
 ;;; from the second file. Both of these metrics are appropriate to the
 ;;; problem, since the former tries to minimize the total changes and
 ;;; the latter gives a preference to small changes.
-;;; 
+;;;
 ;;; While neither metric actually builds the dynamic programming table,
 ;;; they can be considered as exploring the table in successive
 ;;; rectilinear and diagonal manners, respectively.
@@ -188,7 +189,7 @@
 ;;; different files would lead to worst-case behavior. The diagonal
 ;;; metric seems to be slightly faster and less of a space hog than
 ;;; the rectilinear metric, so it has been made the default.
-;;; 
+;;;
 ;;; We show below that the average case running time is O(n+m).
 ;;;
 
@@ -236,31 +237,31 @@
 ;;; Clearly r(i) is an integer between 1 and n (inclusive). For a given
 ;;; integer i between 1 and n (inclusive), we count how often i occurs
 ;;; in a composition of n into k distinct parts. Call this count
-;;; Comp[n,k,i]. Then the sum is equal to 
+;;; Comp[n,k,i]. Then the sum is equal to
 ;;;	    Sum[k = 1 to n; Sum[i = 1 to n; Comp[n,k,i] i^2]]
 ;;;
 ;;; Now the number of occurrences of i in the compositions of n into k
 ;;; distinct parts is the same as multiplying together the number of
 ;;; compositions of n-i into k-1 parts and the number of positions in
-;;; which i could be inserted to form a k-part composition of n. The 
-;;; latter quantity is clearly k. To see that the former is 
+;;; which i could be inserted to form a k-part composition of n. The
+;;; latter quantity is clearly k. To see that the former is
 ;;; C(n-i-1,k-2), consider n-i ones separated by (n-i)-1 spaces, and
 ;;; choose (k-1)-1 of them to form k-1 integers. Thus Comp[n,k,i] is
 ;;; k C(n-i-1,k-2).
-;;; 
+;;;
 ;;; So our sum is equal to
 ;;;    Sum[k = 1 to n; Sum[i = 1 to n; k(i^2)C(n-i-1,k-2)]]
 ;;;	  = Sum[i = 1 to n; i^2 Sum[k = 1 to n; kC(n-i-1,k-2)]]
-;;;	  = Sum[i = 1 to n; i^2 Sum[k = 1 to n; 
+;;;	  = Sum[i = 1 to n; i^2 Sum[k = 1 to n;
 ;;;                                 (k-2)C(n-i-1,k-2) + 2C(n-i-1,k-2)]]
-;;;	  = Sum[i = 1 to n; i^2 Sum[k = 1 to n; 
+;;;	  = Sum[i = 1 to n; i^2 Sum[k = 1 to n;
 ;;;                                 (n-i-1)C(n-i-2,k-3) + 2C(n-i-1,k-2)]]
 ;;;	  = Sum[i = 1 to n-2; i^2 (n-i-1) 2^(n-i-2)]
 ;;;         + Sum[i = 1 to n; i^2 2^(n-i)]
 ;;; Substituting j = n-i+1 yields
-;;;       = Sum[j = 3 to n; (n+1-j)^2 (j-2) 2^(j-3)] 
+;;;       = Sum[j = 3 to n; (n+1-j)^2 (j-2) 2^(j-3)]
 ;;;         + Sum[j = 1 to n; (n+1-j)^2 2^(j-1)]
-;;;       = Sum[j = 1 to n-2; (n-1-j)^2 j 2^(j-1)] 
+;;;       = Sum[j = 1 to n-2; (n-1-j)^2 j 2^(j-1)]
 ;;;         + Sum[j = 1 to n; (n+1-j)^2 2^(j-1)]
 ;;;       = (Sum[j = 1 to n-2; 2^j (j^3 - (2n-2) j^2 + (n-1)^2 j)]
 ;;;          + Sum[j = 1 to n; 2^j (j^2 - (2n+2)j + (n+1)^2)])/2
@@ -270,7 +271,7 @@
 ;;;    Sum[j = 1 to n; j^2 2^j] = (2n^2 - 4n + 6)2^n - 6
 ;;;    Sum[j = 1 to n; j^3 2^j] = (2n^3 - 6n^2 + 18n - 26)2^n + 26
 ;;; to obtain
-;;;    1/2[2^(n-1)((n-2)^3 - 3(n-2)^2 + 9(n-2) - 13 
+;;;    1/2[2^(n-1)((n-2)^3 - 3(n-2)^2 + 9(n-2) - 13
 ;;;                - 2(n-1)((n-2)^2 - 2(n-2) + 3)
 ;;;                + (n-1)^2(n-3))
 ;;;        2^n(2n^2 - 4n + 6
@@ -415,23 +416,7 @@
 ;;; Source Compare *************************************************
 ;;; ****************************************************************
 
-(in-package "SOURCE-COMPARE" :nicknames '("SRCCOM" "SC"))
-
-(export '(source-compare		; main routine
-	  ;; Core function parameters used to keep files in sync.
-	  *greedy-metric*		
-	  *minimum-match-length*
-	  ;; Program default display.
-	  *print-context*		
-	  *print-fancy-header*
-	  *context-lines-before-difference*
-	  *context-lines-after-difference*
-	  ;; Program default modes.
-	  *ignore-comments*
-	  *dont-ignore-major-comments*
-	  *ignore-case*
-	  *ignore-whitespace*
-	  *ignore-blank-lines*))
+(in-package "SOURCE-COMPARE")
 
 ;;; ********************************
 ;;; Global Vars ********************
@@ -442,7 +427,7 @@
   "If T, prints a fancy header instead of the simple one.")
 (defvar *context-lines-before-difference* 0
   "Number of lines to print before a difference.")
-(defvar *context-lines-after-difference* 1 
+(defvar *context-lines-after-difference* 1
   "Number of lines to print after a difference.")
 
 (defvar *greedy-metric* 'find-next-diagonal-match
@@ -468,7 +453,7 @@
 (defvar *ignore-comments* t
   "If T, will try to ignore comments of the semicolon variety when
    comparing lines. Tries to be rather intelligent about the context
-   to avoid ignoring something that really isn't a comment. For example, 
+   to avoid ignoring something that really isn't a comment. For example,
    semicolons appearing within strings, even multi-line strings, are not
    considered comment characters. Uses the following heuristics to decide
    if a semicolon is a comment character or not:
@@ -515,28 +500,28 @@
   ;; BALANCED-COMMENT-COUNT-TABLE is a table of flags which indicate whether
   ;; the line terminates while still inside a balanced comment, and if so,
   ;; how many are left to be closed. This is useful for parsing multi-line
-  ;; balanced comments. 
+  ;; balanced comments.
   ;; FILE-NAME is the name of the file.
   ;; FILE-STREAM is the input stream open to the file.
   ;; EOF is a flag which is true when the end of the file has been reached.
   ;; If so, it is one more than the last valid line number.
-  (line-table (make-array (list 100.) 
-			  :element-type t :fill-pointer 0 :adjustable t)) 
-  (inside-string-table (make-array (list 100.) 
+  (line-table (make-array (list 100.)
+			  :element-type t :fill-pointer 0 :adjustable t))
+  (inside-string-table (make-array (list 100.)
 				   :element-type t
 				   :initial-element nil
 				   :fill-pointer 0 :adjustable t))
-  (balanced-comment-count-table (make-array (list 100.) 
+  (balanced-comment-count-table (make-array (list 100.)
 					    :element-type t
 					    :initial-element 0
 					    :fill-pointer 0 :adjustable t))
   file-name
-  file-stream				
+  file-stream
   (eof nil))
 
 (defun file-cache-length (file)
   "The number of lines cached is simply the length of the line table.
-   Note that since this table has a fill-pointer, it's length is the 
+   Note that since this table has a fill-pointer, it's length is the
    size indicated by the fill-pointer, not the array dimensions."
   (length (file-cache-line-table file)))
 
@@ -546,7 +531,7 @@
     (aref (file-cache-line-table file) line-no)))
 
 (defun cached-comment-position-info (file line-no)
-  "Returns the cached comment position (inside-string and 
+  "Returns the cached comment position (inside-string and
    balanced-comment-count) information for the line, if it exists."
   (if (< line-no (file-cache-length file))
       (values (aref (file-cache-inside-string-table file) line-no)
@@ -561,9 +546,9 @@
   ;; Why doesn't CL have a defsetf with multiple values? That would
   ;; make life here so much easier. [Done 12-24-90 MK. Not installing
   ;; here to avoid clashes with other Lisps.]
-  (setf (aref (file-cache-inside-string-table file) line-no) 
+  (setf (aref (file-cache-inside-string-table file) line-no)
 	inside-string)
-  (setf (aref (file-cache-balanced-comment-count-table file) line-no) 
+  (setf (aref (file-cache-balanced-comment-count-table file) line-no)
 	balanced-comment-count))
 
 (defun get-and-cache-next-line (file)
@@ -574,7 +559,7 @@
 	(progn
 	  (vector-push-extend line (file-cache-line-table file))
 	  (vector-push-extend nil (file-cache-inside-string-table file))
-	  (vector-push-extend 
+	  (vector-push-extend
 	   0 (file-cache-balanced-comment-count-table file)))
       ;; If the line was null, we've reached the end of the file.
       ;; Set the eof flag to be the line number of the end of file.
@@ -632,7 +617,7 @@
 (defvar *bar-char* #\|
   "One of the characters used to begin balanced comments.")
 
-(defun find-comment-position (line &optional (start 0) end 
+(defun find-comment-position (line &optional (start 0) end
 				   &key inside-string (splat-bar-count 0))
   "Tries to find the position of the beginning of the comment at the
    end of LINE, if there is one. START and END delimit the search. END
@@ -649,15 +634,15 @@
 	 (splat-bar-count splat-bar-count)
 	 (splat-flag nil)(bar-flag nil))
 	((= position end)
-	 ;; If we run off the end, return nil to signify 
+	 ;; If we run off the end, return nil to signify
 	 ;; that nothing was found.
 	 (values nil inside-string splat-bar-count))
       (let ((char (char line position)))
 	;; Slashification works inside strings but not balanced comments.
-	;; Balanced comments do not work inside strings. 
+	;; Balanced comments do not work inside strings.
 	;; Strings do not work inside balanced comments.
 	;; Regular comments do not work inside strings or balanced comments
-	(cond (last-char-was-slash 
+	(cond (last-char-was-slash
 	       ;; If the last character was a slash, throw this one away
 	       ;; and reset the flag.
 	       (setf last-char-was-slash nil))
@@ -719,7 +704,7 @@
 ;;; Test find-comment-position on the various combinations of
 ;;; #| |#, ;, "foo", |foo|, and \. Note that this commented out
 ;;; region of this source file will itself serve as a good test
-;;; when source-compare is run on this file! 
+;;; when source-compare is run on this file!
 (find-comment-position "#| ; |# ;")
 (find-comment-position "\" ; \" ;")
 (find-comment-position "| ; | ;")
@@ -732,7 +717,7 @@
 (defun get-comment-position (line file line-no &optional (start 0) end)
   "Returns the position of the beginning of the semicolon variety comment
    on this line."
-  ;; Get the cached position info for the previous line. 
+  ;; Get the cached position info for the previous line.
   (multiple-value-bind (inside-string balanced-comment-count)
       (if (zerop line-no)
 	  ;; Default for first line of the file.
@@ -740,7 +725,7 @@
 	(cached-comment-position-info file (1- line-no)))
     ;; Find the comment position for this line.
     (multiple-value-bind (end new-is new-bcc)
-	(find-comment-position line start end 
+	(find-comment-position line start end
 			       :inside-string inside-string
 			       :splat-bar-count balanced-comment-count)
       ;; Cache the position info for this line.
@@ -755,7 +740,7 @@
   ;; Note that find-comment-position will return nil if it doesn't
   ;; find a comment, which is the default value of :end keywords
   ;; in the string comparison functions (signifying the end of the string).
-  (let ((new-end (when *ignore-comments* 
+  (let ((new-end (when *ignore-comments*
 		   (get-comment-position line file line-no start end))))
     (cond ((and *dont-ignore-major-comments*
 		*ignore-comments*
@@ -782,7 +767,7 @@
 (defun compare-lines (file-1 line-no-1 file-2 line-no-2)
   "Intelligently compare two lines. If *ignore-case* is T, uses
    case-insensitive comparison. If *ignore-whitespace* is T, ignores
-   spaces and tabs at the beginning of the line. If *ignore-comments* 
+   spaces and tabs at the beginning of the line. If *ignore-comments*
    is T, tries to ignore comments at the end of the line."
   (let ((string-1 (get-line file-1 line-no-1))
 	(string-2 (get-line file-2 line-no-2)))
@@ -812,7 +797,7 @@
 ;;; Main Routine *******************
 ;;; ********************************
 (defun source-compare (filename-1 filename-2
-                                  &key (output-stream *standard-output*) 
+                                  &key (output-stream *standard-output*)
                                   (ignore-case *ignore-case*)
 				  (ignore-whitespace *ignore-whitespace*)
 				  (ignore-comments *ignore-comments*)
@@ -828,29 +813,29 @@
    (where a is ADD, d is DELETE, and c is CHANGE) are followed by the
    lines affected in the first (left) file flagged by '<' then all the
    lines affected in the second (right) file flagged by '>'. If PRINT-CONTEXT
-   is T, will print out some additional contextual information, such as 
+   is T, will print out some additional contextual information, such as
    additional lines before and after the affected text and the definition
    most likely to be affected by the changes. If PRINT-FANCY-HEADER is T,
    prints the file-author and file-write-date in the header. The report is
    output to OUTPUT-STREAM. Returns T if the files were \"identical\",
    NIL otherwise.
-   If IGNORE-CASE is T, uses a case insensitive comparison. 
+   If IGNORE-CASE is T, uses a case insensitive comparison.
    If IGNORE-WHITESPACE is T, ignores spaces and tabs that occur at the
    beginning of the line. If IGNORE-COMMENTS is T, tries to ignore
    comments at the end of the line. If *dont-ignore-major-comments* is T, will
    also ignore major comments (comments with a semicolon at char 0 of the
    line). If IGNORE-BLANK-LINES is T, will ignore blank lines in both
-   files, including lines that are effectively blank because of ignored 
+   files, including lines that are effectively blank because of ignored
    comments."
   (with-open-file-cached (file-1 filename-1 :direction :input)
     (with-open-file-cached (file-2 filename-2 :direction :input)
       ;; Print the header.
-      (draw-header filename-1 filename-2 
-		   :stream output-stream 
+      (draw-header filename-1 filename-2
+		   :stream output-stream
 		   :print-fancy-header print-fancy-header)
       ;; Do the actual comparisons.
       (let ((no-changes
-	     (source-compare-internal file-1 file-2 :stream output-stream 
+	     (source-compare-internal file-1 file-2 :stream output-stream
 				      :ignore-case ignore-case
 				      :ignore-whitespace ignore-whitespace
 				      :ignore-comments ignore-comments
@@ -873,7 +858,7 @@
    far is a correct match. When we encounter a difference, we find the
    closest next match, where \"close\" is defined in terms of some
    metric. Two common metrics are max(x,y) and x+y, where x is a line number
-   from file-2 and y is a line number from file-1. The former leads to 
+   from file-2 and y is a line number from file-1. The former leads to
    expanding (exploring) the table by increasing rectangles, and the
    latter by increasing triangles:
                      #####          #
@@ -885,7 +870,7 @@
    case, of course, is still O(n^2), but this hardly ever occurs for source
    comparison. The metric is implemented by *greedy-metric*,
    which is either FIND-NEXT-RECTILINEAR-MATCH or FIND-NEXT-DIAGONAL-MATCH."
-  (let ((*ignore-whitespace* ignore-whitespace) 
+  (let ((*ignore-whitespace* ignore-whitespace)
         (*ignore-case* ignore-case)
         (*ignore-comments* ignore-comments)
 	(*ignore-blank-lines* ignore-blank-lines)
@@ -902,8 +887,8 @@
 	 ;; When we are at the end of both files, return whether the
 	 ;; files are identical or not.
 	 ;; use (eql (file-cache-eof file-1) (1- line-no-1)) here?
-	 ;; need the 1- because of where the incrementing is happening. 
-	 ;; could always have a 1+ in file-cache-eof.... 
+	 ;; need the 1- because of where the incrementing is happening.
+	 ;; could always have a 1+ in file-cache-eof....
 	 ;; well, the >= is safer.
 	 no-changes)
       (multiple-value-bind (lines-same line-1-blank line-2-blank)
@@ -996,7 +981,7 @@
 
 (defun FIND-NEXT-RECTILINEAR-MATCH (file-1 start-1 file-2 start-2)
   "First difference detected, look ahead for a match [max(x,y) version]."
-  (let ((line-1 start-1) 
+  (let ((line-1 start-1)
 	(line-2 start-2)
         eof-1 eof-2)
     (loop
@@ -1022,7 +1007,7 @@
 		(return (values match line-2)))))))))
 
 (defun find-linear-match (file line-start line-end comp-file comp-line-no)
-  "Proceeds linearly in file from line-start to line-end until it 
+  "Proceeds linearly in file from line-start to line-end until it
    finds a match against comp-line-no of comp-file."
   (do ((line-no line-start (1+ line-no)))
       ((> line-no line-end))
@@ -1035,7 +1020,7 @@
 (defun found-match (file-1 line-1 file-2 line-2)
   "Check if we've found a match by verifying that the next few lines
    are identical. If *minimum-match-length* is more than 1, has the
-   effect of grouping together differences separated only by one 
+   effect of grouping together differences separated only by one
    matching line."
   ;; Note that this declares a match as early as possible, keeping
   ;; comments out of the match region. so-co then has to
@@ -1052,7 +1037,7 @@
     (multiple-value-bind (lines-same line-1-blank line-2-blank)
 	(compare-lines file-1 line-1 file-2 line-2)
       ;; Note that only if *ignore-blank-lines* is T could
-      ;; line-1-blank and line-2-blank be non-nil. 
+      ;; line-1-blank and line-2-blank be non-nil.
       (cond ((and lines-same (not (or line-1-blank line-2-blank)))
 	     ;; A real line matching a real line. Do nothing since
 	     ;; the count is automatically incremented.
@@ -1068,7 +1053,7 @@
 		    ;; Two blank lines. Do nothing -- they'll be
 		    ;; skipped automatically.
 		    nil)
-		   (first-match 
+		   (first-match
 		    ;; We have a mismatch of real against blank, and it's on
 		    ;; the first real pairing. Skipping the blank line would
 		    ;; lead to so-co getting out of sync, so we
@@ -1094,7 +1079,7 @@
 (defun found-match (file-1 line-1 file-2 line-2)
   "Check if we've found a match by verifying that the next few lines
    are identical. If *minimum-match-length* is more than 1, has the
-   effect of grouping together differences separated only by one 
+   effect of grouping together differences separated only by one
    matching line."
   (do ((line-1 line-1 (1+ line-1))
        (line-2 line-2 (1+ line-2))
@@ -1106,7 +1091,7 @@
     (multiple-value-bind (lines-same line-1-blank line-2-blank)
 	(compare-lines file-1 line-1 file-2 line-2)
       ;; Note that only if *ignore-blank-lines* is T could
-      ;; line-1-blank and line-2-blank be non-nil. 
+      ;; line-1-blank and line-2-blank be non-nil.
       (cond ((and lines-same (not (or line-1-blank line-2-blank)))
 	     ;; A real line matching a real line. Do nothing.
 	     nil)
@@ -1123,7 +1108,7 @@
 ;;; Line Contexts ******************
 ;;; ********************************
 (defun start-context (file line-no)
-  "Walks backwards from LINE-NO until it finds the beginning of a 
+  "Walks backwards from LINE-NO until it finds the beginning of a
    definition (a line with a left-parenthesis on char 0)."
   (when (plusp line-no)
     (do* ((i (1- line-no) (1- i))
@@ -1136,7 +1121,7 @@
 ;;; ********************************
 ;;; Report Generator ***************
 ;;; ********************************
-(defun draw-header (filename-1 filename-2 
+(defun draw-header (filename-1 filename-2
 			       &key (stream *standard-output*)
 			       print-fancy-header)
   "Draw the header for the source compare report."
@@ -1146,17 +1131,17 @@
 	 (format stream "~&Source compare of")
 	 (format stream "~&     ~A~&     (written by ~A, ~A)"
 		 filename-1
-		 (file-author filename-1) 
+		 (file-author filename-1)
 		 (time-string (file-write-date filename-1)))
 	 (format stream "~&  with")
 	 (format stream "~&     ~A~&     (written by ~A, ~A)"
-		 filename-2 
+		 filename-2
 		 (file-author filename-2)
 		 (time-string (file-write-date filename-2))))
 	(t
 	 (format stream "~&Source compare of ~A with ~A"
 		 filename-1 filename-2)))
-  (draw-bar stream)	 
+  (draw-bar stream)
   (finish-output stream))
 
 (defun time-string (universal-time)
@@ -1165,7 +1150,7 @@
 	(decode-universal-time universal-time)
       (format nil "~@:(~A ~A-~A-~A ~2,'0d:~2,'0d:~2,'0d~)"
 	      (svref '#("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun") dow)
-	      date 
+	      date
 	      (svref '#(0 "Jan" "Feb" "Mar" "Apr" "May"
 			  "Jun" "Jul" "Aug" "Sep" "Oct"
 			  "Nov" "Dec")
@@ -1188,7 +1173,7 @@
 
 (defun print-differences (file-1 start-1 end-1 file-2 start-2 end-2
 				 &optional (stream *standard-output*))
-  "Print the differences in the two files in a format similar to diff." 
+  "Print the differences in the two files in a format similar to diff."
   (print-range start-1 end-1 stream)
   (cond ((= end-1 start-1)
 	 ;; We added the text in file2
@@ -1207,7 +1192,7 @@
   ;; Make sure that the output is displayed piecemeal.
   (finish-output stream))
 
-(defun print-file-segment (file start end 
+(defun print-file-segment (file start end
 				&optional (stream *standard-output*)
 				(left-margin ""))
   "Prints the region of FILE from START to END."
